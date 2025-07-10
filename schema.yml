@@ -1,1 +1,82 @@
 
+
+sources:
+  - name: raw
+    schema: raw
+    tables:
+      - name: raw_bookings
+        description: "Single nested JSON export of booking, passenger, segment, ticket data"
+
+models:
+  - name: stg_booking
+    description: "Flattened booking header"
+    columns:
+      - name: bookingId
+        tests: [unique, not_null]
+
+  - name: stg_ticket
+    description: "Flattened ticket data"
+    columns:
+      - name: ticketId
+        tests: [unique, not_null]
+
+  - name: stg_passenger
+    description: "Flattened passenger data"
+    columns:
+      - name: passengerId
+        tests: [unique, not_null]
+
+  - name: stg_segment
+    description: "Flattened segment data"
+    columns:
+      - name: segmentId
+        tests: [unique, not_null]
+
+  - name: map_ticket_segment
+    description: "Map table linking tickets to segments (M2M)"
+    columns:
+      - name: ticketId
+        tests: [not_null]
+      - name: segmentId
+        tests: [not_null]
+      - tests:
+          - dbt_utils.unique_combination_of:
+              combination_of: [ticketId, segmentId]
+
+  - name: map_ticket_passenger
+    description: "Map table linking tickets to passengers (M2M)"
+    columns:
+      - name: ticketId
+        tests: [not_null]
+      - name: passengerId
+        tests: [not_null]
+      - tests:
+          - dbt_utils.unique_combination_of:
+              combination_of: [ticketId, passengerId]
+
+  - name: fact_booking
+    description: "Booking-level fact table"
+    columns:
+      - name: bookingId
+        tests: [unique, not_null]
+      - name: total_booking_price
+      - name: ticket_count
+      - name: passenger_count
+
+  - name: dim_ticket
+    description: "Ticket dimension"
+    columns:
+      - name: ticketId
+        tests: [unique, not_null]
+
+  - name: dim_passenger
+    description: "Passenger dimension"
+    columns:
+      - name: passengerId
+        tests: [unique, not_null]
+
+  - name: dim_segment
+    description: "Segment dimension"
+    columns:
+      - name: segmentId
+        tests: [unique, not_null]

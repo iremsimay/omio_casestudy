@@ -1,0 +1,74 @@
+
+
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.utils.dates import days_ago
+from datetime import timedelta
+
+default_args = {
+    'owner': 'omio_data_team',
+    'depends_on_past': False,
+    'retries': 2,
+    'retry_delay': timedelta(minutes=5),
+    'email_on_failure': True,
+    'email': ['data-team@omio.com']
+}
+
+with DAG(
+    'omio_dbt_pipeline',
+    default_args=default_args,
+    description='End-to-end pipeline for Omio case study',
+    schedule_interval='@daily',
+    start_date=days_ago(1),
+    catchup=False
+) as dag:
+
+    ingest_raw_data = BashOperator(
+        task_id='ingest_raw_data',
+        bash_command='echo "Simulate raw JSON load to BigQuery"'
+    )
+
+    run_dbt_seed = BashOperator(
+        task_id='run_dbt_seed',
+        bash_command='dbt seed --project-dir /usr/local/airflow/dags/dbt'
+    )
+
+    run_dbt_run = BashOperator(
+        task_id='run_dbt_run',
+        bash_command='dbt run --project-dir /usr/local/airflow/dags/dbt'
+    )
+
+    run_dbt_test = BashOperator(
+        task_id='run_dbt_test',
+        bash_command='dbt test --project-dir /usr/local/airflow/dags/dbt'
+    )
+
+    ingest_raw_data >> run_dbt_seed >> run_dbt_run >> run_dbt_test
+
+# Pipeline Orchestration (Airflow)
+
+We use Apache Airflow to orchestrate our end-to-end data pipeline:
+1. Ingest raw JSON exp. into the warehouse
+2. Run dbt seed
+3. Run dbt transformations
+4. Run dbt tests fr data quality
+used
+- Daily scheduling (@daily)
+- Task dependencies ensure correct execution order
+- Retries hwith delay to handle transient failures
+- Email notifications on ffailure
+Example of DAG snippet:
+hwith DAG(
+    'omio_dbt_pipeline',
+    default_args=default_args,
+    schedule_interval='@daily'
+) as dag:
+    ingest_raw_data >> run_dbt_seed >> run_dbt_run >> run_dbt_test
+
+
+
+
+
+
+
+      

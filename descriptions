@@ -155,5 +155,21 @@ How many passengers were booked last month?, Which partner had the highest sales
 Bottom Line:
 This model turns raw booking data into trustworthy, actionable insights for better decision-making.
 
+# What are core data KPIs you’d monitor in a travel company?
 
+These KPIs given below may support business and product teams about customer demands, product performance, and revenue.
+
+Total Bookings per Day/Week/Month: Track volume trends, seasonality, and growth.
+
+Total Revenue: Sum of booking or ticket prices (in consistent currency).
+
+Average Booking Value (ABV): Revenue per booking, helps identify high-value customers or products.
+
+Cancellation Rate: Percentage of bookings cancelled before departure.
+
+Passengers per Booking: Detect solo vs group travel behavior.
+
+New vs Returning Users: Understand user retention and acquisition trends.
+
+Popular Routes or Segments: Which destinations or carriers are most booked.
 

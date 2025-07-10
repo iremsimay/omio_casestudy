@@ -1,1 +1,107 @@
 
+## ER Diagram
+
+
+
+                             +-------------------------------+
+                             |         dim_segment           |
+                             |-------------------------------|
+                             | segmentId (PK)                |
+                             | carrierName                   |
+                             | departureDatetime             |
+                             | arrivalDatetime               |
+                             | travelMode                    |
+                             +-------------------------------+
+
+                                   |              ^
+                                   |              |
+                                   |              |
+                                   v              |
+ +-------------------------------+   +-------------------------------+
+ |     map_ticket_segment        |   |     map_ticket_passenger       |
+ |-------------------------------|   |-------------------------------|
+ | ticketId (PK)                 |   | ticketId (PK)                  |
+ | segmentId (PK)                |   | passengerId (PK)               |
+ +-------------------------------+   +-------------------------------+
+          ^         |                       ^         |
+          |         |                       |         |
+          |         v                       |         v
+
+                             +-------------------------------+
+                             |          dim_ticket           |
+                             |-------------------------------|
+                             | ticketId (PK)                 |
+                             | vendorCode                    |
+                             | bookingCurrency               |
+                             | bookingPrice                  |
+                             | bookingId                     | 
+                             +-------------------------------+
+
+                                         |
+                                         |
+                                         v
+
+                             +-------------------------------+
+                             |         fact_booking          |
+                             |-------------------------------|
+                             | bookingId (PK)                |
+                             | createdAt                     |
+                             | updatedAt                     |
+                             | userSelectedCurrency          |
+                             | partnerIdOffer                |
+                             | total_booking_price           |
+                             | ticket_count                  |
+                             | passenger_count               |
+                             +-------------------------------+
+
+                                         ^
+                                         |
+                                         |
+
+                             +-------------------------------+
+                             |        dim_passenger          |
+                             |-------------------------------|
+                             | passengerId (PK)              |
+                             | type                          |
+                             | bookingId                     | 
+                             +-------------------------------+
+
+
+# Defining keys, relationships
+Primary Keys (PK):
+
+fact_booking: bookingId (PK)
+dim_ticket: ticketId (PK)
+dim_passenger: passengerId (PK)
+dim_segment: segmentId (PK)
+map_ticket_segment: composite PK (ticketId, segmentId)
+map_ticket_passenger: composite PK (ticketId, passengerId)
+
+Foreign Keys (FK):
+
+fact_booking links to tickets, passengers, segments via map tables
+map_ticket_segment joins dim_ticket ↔ dim_segment
+map_ticket_passenger joins dim_ticket ↔ dim_passenger
+
+Relationships
+
+fact_booking is the central fact table at bookingId grain
+Dimensions describe entities (ticket, passenger, segment)
+Map tables resolve many-to-many relationships between tickets and passengers/segments
+
+# Why I chose this structure
+
+We use a star schema with a central fact_booking table representing booking-level transactional data, joined to dimension tables for tickets, passengers, and segments.
+This structure supports:
+Simplified analytics queries by flattening complex JSON source into clear tables.
+Separation of business metrics (fact) from descriptive attributes (dimensions).
+High flexibility for reporting, allowing slicing and dicing by ticket, passenger, and segment attributes.
+We also include map tables to accurately model many-to-many relationships:
+One ticket may include multiple segments (e.g., outbound/return).
+One ticket may be shared by multiple passengers (like a group booking).
+Using map tables keeps the star schema normalized and avoids data duplication, ensuring data integrity and making the model easier to maintain and extend.
+
+
+
+
+

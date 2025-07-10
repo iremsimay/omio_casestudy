@@ -1,1 +1,57 @@
 # omio_casestudy
+
+1- We are going to create 6 staging tables from the json file. Here a sample of assumption of the source.
+
+[
+  {
+    "bookingId": "B001",
+    "createdAt": "2024-07-01T10:00:00",
+    "updatedAt": "2024-07-01T10:05:00",
+    "userSelectedCurrency": "EUR",
+    "partnerIdOffer": "partner_abc",
+    "passengers": [
+      {"passengerId": "P001", "type": "adult"},
+      {"passengerId": "P002", "type": "child"}
+    ],
+    "segments": [
+      {
+        "segmentId": "S001",
+        "carrierName": "Lufthansa",
+        "departureDatetime": "2024-07-10T07:00:00",
+        "arrivalDatetime": "2024-07-10T09:00:00",
+        "travelMode": "flight"
+      }
+    ],
+    "tickets": [
+      {
+        "ticketId": "T001",
+        "bookingPrice": 120.0,
+        "bookingCurrency": "EUR",
+        "vendorCode": "LH",
+        "segments": ["S001"],
+        "passengers": ["P001", "P002"]
+      }
+    ]
+  }
+],
+
+2-Here is our 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

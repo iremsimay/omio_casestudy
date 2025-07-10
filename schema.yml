@@ -54,14 +54,20 @@ models:
           - dbt_utils.unique_combination_of:
               combination_of: [ticketId, passengerId]
 
-  - name: fact_booking
+- name: fact_booking
     description: "Booking-level fact table"
     columns:
       - name: bookingId
         tests: [unique, not_null]
       - name: total_booking_price
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "total_booking_price >= 0"
       - name: ticket_count
       - name: passenger_count
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "passenger_count >= 1"
 
   - name: dim_ticket
     description: "Ticket dimension"
@@ -80,3 +86,7 @@ models:
     columns:
       - name: segmentId
         tests: [unique, not_null]
+
+
+# We completed our technical tests in yml documentation while creating stg tables from json file. (pre transform to catch issues in raw ingested data before transformation.)
+# Also added business logic tests to fact table to check passanger count and booking price

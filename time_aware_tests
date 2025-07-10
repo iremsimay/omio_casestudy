@@ -1,0 +1,54 @@
+Answer to:
+Add time-aware tests comparing current run vs. historical data:
+“today's total ticket volume is >50% less than average of last 7 days”
+
+# models/marts/daily_ticket_volume.sql
+select
+    date_trunc(createdAt, day) as day,
+    count(distinct ticketId) as ticket_volume
+from {{ ref('stg_ticket') }}
+group by day
+
+#models/marts/ticket_volume_7d_avg.sql
+select
+    day,
+    avg(ticket_volume) over (order by day rows between 7 preceding and 1 preceding) as avg_ticket_volume
+from {{ ref('daily_ticket_volume') }}
+
+# anomly detection:  models/tests/check_ticket_volume_anomaly.sql
+with current_day as (
+    select
+        max(day) as day,
+        max(ticket_volume) as ticket_volume
+    from {{ ref('daily_ticket_volume') }}
+),
+avg_7d as (
+    select
+        max(avg_ticket_volume) as avg_volume
+    from {{ ref('ticket_volume_7d_avg') }}
+)
+select
+    current_day.day,
+    current_day.ticket_volume,
+    avg_7d.avg_volume
+from current_day, avg_7d
+where current_day.ticket_volume < 0.5 * avg_7d.avg_volume
+
+
+## Time-Aware Data Quality Testing
+
+We implement time-aware anomaly detection to monitor booking health over time.
+
+Example check:
+
+> "Today's total ticket volume is more than 50% less than the average of the last 7 days."
+
+This is implemented via:
+
+- Daily ticket volume aggregation model
+- 7-day rolling average model
+- Anomaly detection query comparing today's value to historical average
+- Alert if volume drops >50%
+
+This approach helps catch anomalies in data failures or business anomalies.
+

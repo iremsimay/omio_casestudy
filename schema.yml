@@ -90,3 +90,11 @@ models:
 
 # We completed our technical tests in yml documentation while creating stg tables from json file. (pre transform to catch issues in raw ingested data before transformation.)
 # Also added business logic tests to fact table to check passanger count and booking price
+# We completed post transform test to validate that business rules and logic have been correctly applied and that outputs (like KPIs) are accurate.
+# We completed technical tests via focus on structural integrity such as  PK uniqueness, not_null constraints
+# We completed business tests via validate domain-specific rules and expectations such as "Every booking has ≥1 passenger", "Total booking price ≥ 0"
+# To test seasonality anomalies like Train strikes, we can recognize planned or expected data anomalies (e.g. holidays, strikes),
+  maintain an event calendar dimension flagging these dates. adjust anomaly detection thresholds or exclude these periods from alerts.
+
+
+

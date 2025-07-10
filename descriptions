@@ -102,6 +102,58 @@ One ticket may be shared by multiple passengers (like a group booking).
 Using map tables keeps the star schema normalized and avoids data duplication, ensuring data integrity and making the model easier to maintain and extend.
 
 
+## Documentation
+Summary of Data Model & Design Decisions
+
+We designed a star schema with:
+fact_booking at the center (grain = bookingId), contains booking-level metrics: total price, ticket and passenger counts
+dim_ticket, dim_passenger, dim_segment as dimensions, describe tickets, passengers, travel segments with unique IDs
+map_ticket_segment and map_ticket_passenger as map tables, resolve many-to-many relationships (e.g., a ticket covering multiple segments or passengers)
+
+Design Rationale:
+Star schema supports clear, performant analytics queries, dimensions keep descriptive attributes separated from metrics
+Map tables maintain many-to-many relationships without data duplication, unnested raw JSON structure enables easier reporting and transformation
+
+
+How Data Quality is Enforced
+We use dbt tests to enforce data quality at every layer: Pre-transform (Staging) Tests, Unique + not_null constraints on IDs,
+Ensure raw JSON un-nesting produces clean tables
+Post-transform (Fact/Dim) Tests, PK uniqueness on dimension and fact tables
+Business logic tests, such as passenger_count >= 1 for every booking, total_booking_price >= 0
+Advanced Time-aware tests, such as daily ticket volume vs. 7-day average, alerts on unexpected drops, catching silent failures
+Snapshots, track changes over time via updatedAt, answer questions like: "When did this booking's price change?" "What was the offer partner when the user first booked?"
+
+How Stakeholders Can Trust & Explore the Data
+Stakeholders can trust and explore the data confidently thanks to clear dbt documentation with column-level tests, interactive lineage graphs for tracing metrics to sources. 
+Time-aware monitoring with historical aggregates and anomaly detection guards against silent failures,
+while snapshots provide full change history for auditability and point-in-time analysis, ensuring the data remains clean, reliable, and aligned with business needs.
+
+
+# One-pager for PMs (non-technical audience)
+
+Purpose of This Data Model
+We’ve built a clean, reliable data model to help the business answer key questions about bookings, tickets, passengers, and travel segments. The goal is to transform messy, nested raw export data into clear, easy-to-analyze tables.
+
+Key Features
+Booking-Centric View: One central table summarizing each booking with total price, number of tickets, and passenger count.
+Detailed Dimensions: Separate tables for tickets, passengers, and travel segments let you slice and analyze data however you need.
+Map Tables: Capture complex real-world cases where one ticket can cover multiple segments or passengers.
+
+Data Quality & Trust
+Built-in rules ensure no missing or duplicate records.
+Business rules are checked automatically (every booking must have at least one passenger).
+Historical changes (like price updates) are tracked over time.
+Automated daily checks alert us if something looks wrong, like sudden drops in booking volume.
+
+Benefits for the Business
+PMs can confidently use the data for reporting, dashboards, and strategic decisions.
+Supports clear visibility into trends, revenues, and customer behavior.
+
+Enables easy answering of questions like:
+How many passengers were booked last month?, Which partner had the highest sales?, When did the booking’s price change?
+
+Bottom Line:
+This model turns raw booking data into trustworthy, actionable insights for better decision-making.
 
 
 

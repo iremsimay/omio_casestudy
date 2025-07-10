@@ -1,0 +1,25 @@
+# Aggregate monthly booking-level KPIs  This model summarizes bookings by month, Examples: total bookings, total revenue, avg passengers per booking
+
+with bookings as (
+    select
+        date_trunc(createdAt, month) as month,
+        bookingId,
+        total_booking_price,
+        passenger_count
+    from {{ ref('fact_booking') }}
+)
+
+select
+    month,
+    count(distinct bookingId) as total_bookings,
+    sum(total_booking_price) as total_revenue,
+    avg(passenger_count) as avg_passengers_per_booking
+from bookings
+group by month
+
+Bonus: Monthly Summary Reporting Model
+We include a modekl (agg_monthly_booking_summary) designed to report monthly aggregated KPIs.
+We aim to support high-level business monitoring & enable trend analysis over time.
+
+Examples: Total number of bookings per month, Total revenue (sum of booking prices), Average number of passengers per booking
+Benefits: Simplifies dashboard & reporting layer, align with business use cases like forecasting, seasonality analysis

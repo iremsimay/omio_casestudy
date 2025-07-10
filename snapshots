@@ -17,3 +17,9 @@ Example snapshot configuration:
 }}
 select * from {{ source('raw', 'raw_bookings') }}
 {% endsnapshot %}
+
+# When did this booking’s price change?
+By using snapshots, we store each version of the booking with its updatedAt timestamp. This lets us see exactly when the price was updated over time.
+
+# What was the offer partner when the user first booked?
+Snapshots preserve the original record when the booking was first created. We can query the earliest snapshot to find the original offer partner.

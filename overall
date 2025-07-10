@@ -1,6 +1,35 @@
 # omio_casestudy
 
-1- We are going to create 6 staging tables from the json file. Here a sample of assumption of the source.
+
+# 1. Here is our folder structure
+
+omio_case_study/
+  data/
+    raw_bookings.json
+  models/
+    staging/
+      stg_booking.sql
+      stg_segment.sql
+      stg_passenger.sql
+      stg_ticket.sql
+      stg_ticket_segment.sql
+      stg_ticket_passenger.sql
+    intermediate/
+      int_booking_enriched.sql
+    marts/
+      fact_booking.sql
+      dim_passenger.sql
+      dim_segment.sql
+      dim_ticket.sql
+      dim_ticketsegment.sql
+      dim_ticketpassenger.sql
+      map_ticket_segment.sql
+      map_ticket_passenger.sql
+    schema.yml
+  README.md
+
+
+# 2. Here is a sample of assumption of the source. Under data/raw_bookings.json 
 
 [
   {
@@ -35,7 +64,149 @@
   }
 ],
 
-2-Here is our 
+# 3. We are going to create 6 staging tables from the JSON file. Under models/staging/ 
+
+stg_booking.sql // Extracting booking header from raw_bookings
+select
+  bookingId,
+  createdAt,
+  updatedAt,
+  userSelectedCurrency,
+  partnerIdOffer
+from {{ source('raw', 'raw_bookings') }}
+
+stg_passenger.sql // Unnest the passengers array
+select
+  bookingId,
+  passenger.passengerId,
+  passenger.type
+from {{ source('raw', 'raw_bookings') }},
+  unnest(passengers) as passenger
+
+stg_segment.sql // Unnest segments array
+select
+  bookingId,
+  segment.segmentId,
+  segment.carrierName,
+  segment.departureDatetime,
+  segment.arrivalDatetime,
+  segment.travelMode
+from {{ source('raw', 'raw_bookings') }},
+  unnest(segments) as segment
+
+stg_ticket.sql // Unnest the tickets array
+select
+  bookingId,
+  ticket.ticketId,
+  ticket.bookingPrice,
+  ticket.bookingCurrency,
+  ticket.vendorCode
+from {{ source('raw', 'raw_bookings') }},
+  unnest(tickets) as ticket
+
+stg_ticket_segment.sql // Extract ticket-to-segment mapping
+select
+  bookingId,
+  ticket.ticketId,
+  segmentId
+from {{ source('raw', 'raw_bookings') }},
+  unnest(tickets) as ticket,
+  unnest(ticket.segments) as segmentId
+
+stg_ticket_passenger.sql // Extract ticket-to-passenger mapping
+select
+  bookingId,
+  ticket.ticketId,
+  passengerId
+from {{ source('raw', 'raw_bookings') }},
+  unnest(tickets) as ticket,
+  unnest(ticket.passengers) as passengerId
+
+# 3.1. We are going to create intermediate tables under models/intermediate/
+
+int_booking.sql // Join staging tables with metrics
+#Note:
+# This keeps bookingCurrency in the group by to ensure sums are only meaningful within a single currency. 
+# In production, we'd validate all tickets in a booking use the same currency or convert them.
+
+with bookings as (
+    select * from {{ ref('stg_booking') }}
+),
+ticket_agg as (
+    select
+        bookingId,
+        sum(bookingPrice) as total_booking_price,
+        count(*) as ticket_count
+    from {{ ref('stg_ticket') }}
+    group by bookingId
+),
+passenger_agg as (
+    select
+        bookingId,
+        count(*) as passenger_count
+    from {{ ref('stg_passenger') }}
+    group by bookingId
+)
+select
+    b.*,
+    t.total_booking_price,
+    t.ticket_count,
+    p.passenger_count
+from bookings b
+left join ticket_agg t on b.bookingId = t.bookingId
+left join passenger_agg p on b.bookingId = p.bookingId
+
+#3.2 We are going to create intermediate tables under models/marts/
+
+fact_booking.sql // Final fact table for bookings
+select * from {{ ref('int_booking') }}
+
+dim_passanger.sql // Passenger dimension
+select
+  distinct passengerId,
+  type
+from {{ ref('stg_passenger') }}
+
+dim_segment.sql // Segment dimension
+select
+  distinct segmentId,
+  carrierName,
+  departureDatetime,
+  arrivalDatetime,
+  travelMode
+from {{ ref('stg_segment') }}
+
+dim_ticket.sql // Ticket dimension
+select
+  distinct ticketId,
+  vendorCode,
+  bookingCurrency,
+  bookingPrice
+from {{ ref('stg_ticket') }}
+
+map_ticket_segment.sql // Map table linking tickets to segments (many to many relationship), (ticketId, segmentId) composite primary key 
+select distinct
+  ticketId,
+  segmentId
+from {{ ref('stg_ticket_segment') }}
+
+map_ticket_passenger.sql //  Map table linking tickets to passengers (many to many relationship) (ticketId, passengerId) composite primary key
+select distinct
+  ticketId,
+  passengerId
+from {{ ref('stg_ticket_passenger') }}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

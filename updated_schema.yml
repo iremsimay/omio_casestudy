@@ -1,0 +1,121 @@
+-- updated yml file according to map tables 
+
+
+models:
+  - name: fact_booking
+    description: "Final fact table containing booking level information."
+    columns:
+      - name: bookingId
+        description: "Unique identifier for each booking."
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_passenger
+    description: "Dimension table with unique passengers aggregated per booking."
+    columns:
+      - name: bookingId
+        description: "Booking identifier (unique per booking)."
+        tests:
+          - unique
+          - not_null
+      - name: passenger_count
+        description: "Number of passengers per booking."
+      - name: passenger_type_count
+        description: "Count of different passenger types."
+      - name: passenger_types
+        description: "List of passenger types."
+
+  - name: dim_segment
+    description: "Dimension table with unique segments aggregated per booking."
+    columns:
+      - name: bookingId
+        description: "Booking identifier (unique per booking)."
+        tests:
+          - unique
+          - not_null
+      - name: segment_count
+        description: "Number of segments per booking."
+      - name: first_departure
+        description: "Earliest departure datetime among segments."
+      - name: last_arrival
+        description: "Latest arrival datetime among segments."
+      - name: travel_modes
+        description: "List of travel modes for the booking."
+      - name: carriers
+        description: "List of carriers involved in the booking."
+
+  - name: dim_ticket
+    description: "Dimension table with unique tickets aggregated per booking."
+    columns:
+      - name: bookingId
+        description: "Booking identifier (unique per booking)."
+        tests:
+          - unique
+          - not_null
+      - name: ticket_count
+        description: "Number of tickets per booking."
+      - name: total_booking_price
+        description: "Sum of booking prices for tickets."
+      - name: vendors
+        description: "List of vendors for tickets."
+      - name: currencies
+        description: "List of currencies used."
+
+  - name: map_booking_passenger
+    description: "Mapping table linking bookings and passengers (many-to-one to dim_passenger)."
+    columns:
+      - name: bookingId
+        description: "Booking identifier."
+        tests:
+          - not_null
+      - name: passengerId
+        description: "Passenger unique identifier."
+        tests:
+          - not_null
+      - name: type
+        description: "Passenger type."
+
+  - name: map_booking_segment
+    description: "Mapping table linking bookings and segments (many-to-one to dim_segment)."
+    columns:
+      - name: bookingId
+        description: "Booking identifier."
+        tests:
+          - not_null
+      - name: segmentId
+        description: "Segment unique identifier."
+        tests:
+          - not_null
+      - name: carrierName
+        description: "Carrier operating the segment."
+      - name: departureDatetime
+        description: "Segment departure time."
+      - name: arrivalDatetime
+        description: "Segment arrival time."
+      - name: travelMode
+        description: "Mode of travel for the segment."
+
+  - name: map_ticket_passenger
+    description: "Mapping table linking tickets and passengers (many-to-many)."
+    columns:
+      - name: ticketId
+        description: "Ticket unique identifier."
+        tests:
+          - not_null
+      - name: passengerId
+        description: "Passenger unique identifier."
+        tests:
+          - not_null
+
+  - name: map_ticket_segment
+    description: "Mapping table linking tickets and segments (many-to-many)."
+    columns:
+      - name: ticketId
+        description: "Ticket unique identifier."
+        tests:
+          - not_null
+      - name: segmentId
+        description: "Segment unique identifier."
+        tests:
+          - not_null
